@@ -1,25 +1,38 @@
-// app/page.js (instead of app/home/page.jsx - this is the main route)
+// app/home/page.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import JobCard from '@/components/JobCard';
-import { jobs as initialJobs } from '@/data/jobs';
+import { useAuth } from '../context/AuthContext';
 
-export default function Home() {
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+export default function HomePage() {
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const { token } = useAuth();
 
   useEffect(() => {
-    const stored = localStorage.getItem('tradecraft_jobs');
-    if (stored) {
-      setJobs(JSON.parse(stored));
-    } else {
-      setJobs(initialJobs);
-      localStorage.setItem('tradecraft_jobs', JSON.stringify(initialJobs));
-    }
+    fetchJobs();
   }, []);
+
+  const fetchJobs = async () => {
+    try {
+      const res = await fetch(`${API_URL}/jobs`);
+      const data = await res.json();
+      if (data.success) {
+        setJobs(data.data);
+        setFilteredJobs(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     filterJobs();
@@ -47,6 +60,14 @@ export default function Home() {
   const statuses = ['open', 'inprogress', 'closed'];
   const statusLabels = { open: 'Open', inprogress: 'In Progress', closed: 'Closed' };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-3 border-[#e8532a]/30 border-t-[#e8532a] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Hero Section */}
@@ -73,7 +94,7 @@ export default function Home() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 px-10 py-5 bg-white border-b border-black/10">
+      <div className="flex flex-wrap items-center gap-3 px-8 py-5 bg-white border-b border-black/10">
         <span className="text-xs font-medium text-[#888896] uppercase tracking-wide">Filter by</span>
         <select
           className="text-sm px-3 py-1.5 border border-black/20 rounded-md bg-white text-[#111118] cursor-pointer appearance-none pr-7 bg-no-repeat bg-right_10px_center"
@@ -109,7 +130,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredJobs.map((job, idx) => (
-              <JobCard key={job.id} job={job} index={idx} />
+              <JobCard key={job._id || job.id} job={job} index={idx} />
             ))}
           </div>
         )}

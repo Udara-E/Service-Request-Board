@@ -13,8 +13,10 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
+    // Check for stored auth data on mount
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
+    
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
@@ -29,7 +31,9 @@ export function AuthProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
+      
       const data = await res.json();
+      
       if (data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -39,7 +43,8 @@ export function AuthProvider({ children }) {
       }
       return { success: false, error: data.error };
     } catch (error) {
-      return { success: false, error: 'Network error' };
+      console.error('Login error:', error);
+      return { success: false, error: 'Network error - make sure the backend server is running' };
     }
   };
 
@@ -50,7 +55,9 @@ export function AuthProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password })
       });
+      
       const data = await res.json();
+      
       if (data.success) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
@@ -58,9 +65,10 @@ export function AuthProvider({ children }) {
         setUser(data.user);
         return { success: true };
       }
-      return { success: false, errors: data.errors };
+      return { success: false, errors: data.errors || [{ msg: data.error }] };
     } catch (error) {
-      return { success: false, error: 'Network error' };
+      console.error('Register error:', error);
+      return { success: false, error: 'Network error - make sure the backend server is running' };
     }
   };
 
@@ -72,11 +80,26 @@ export function AuthProvider({ children }) {
     router.push('/');
   };
 
+  const value = {
+    user,
+    token,
+    loading,
+    login,
+    register,
+    logout
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

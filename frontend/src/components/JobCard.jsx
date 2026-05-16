@@ -2,6 +2,8 @@
 import Link from 'next/link';
 
 export default function JobCard({ job, index }) {
+  const jobId = job._id || job.id;
+  
   const getAccentColor = (category) => {
     const colors = {
       Plumbing: 'bg-blue-600',
@@ -24,6 +26,7 @@ export default function JobCard({ job, index }) {
   };
 
   const timeAgo = (dateStr) => {
+    if (!dateStr) return 'recently';
     const d = new Date(dateStr);
     const now = new Date();
     const diff = Math.floor((now - d) / 1000);
@@ -34,14 +37,14 @@ export default function JobCard({ job, index }) {
   };
 
   return (
-    <Link href={`/jobDetails/${job.id}`}>
+    <Link href={`/jobDetails/${jobId}`}>
       <div 
         className="bg-white border border-black/10 rounded-2xl p-5 cursor-pointer transition-all hover:shadow-md hover:-translate-y-px animate-fadeIn"
         style={{ animationDelay: `${(index || 0) * 0.04}s` }}
       >
         <div className={`h-1 -mt-5 mb-4 rounded-t-2xl ${getAccentColor(job.category)}`} />
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-syne text-sm font-bold leading-tight text-[#111118]">{job.title}</h3>
+          <h3 className="font-syne text-sm font-bold leading-tight text-[#111118] line-clamp-2">{job.title}</h3>
           {getStatusBadge(job.status)}
         </div>
         <p className="text-[13px] text-[#555560] mb-3 line-clamp-2">{job.desc}</p>

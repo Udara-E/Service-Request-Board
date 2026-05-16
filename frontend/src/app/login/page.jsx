@@ -1,8 +1,8 @@
+// app/login/page.jsx
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,8 +13,15 @@ export default function Login() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register } = useAuth();
+  const { user, login, register } = useAuth();
   const router = useRouter();
+
+  // If already logged in, redirect to home
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,28 +32,42 @@ export default function Login() {
     if (isLogin) {
       result = await login(formData.email, formData.password);
     } else {
+      if (!formData.name) {
+        setError('Name is required');
+        setLoading(false);
+        return;
+      }
       result = await register(formData.name, formData.email, formData.password);
     }
 
     if (result.success) {
       router.push('/');
     } else {
-      setError(result.error || result.errors?.[0]?.msg || 'Authentication failed');
+      if (result.errors) {
+        setError(result.errors.map(err => err.msg).join(', '));
+      } else {
+        setError(result.error || 'Authentication failed');
+      }
     }
     setLoading(false);
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-8 py-12">
-      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center px-8 py-12 bg-linear-to-br from-[#1a1a2e] to-[#2a2a4e]">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-[#e8532a] rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
+          <div className="w-16 h-16 bg-[#e8532a] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
             </svg>
           </div>
-          <h2 className="font-syne text-2xl font-bold">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+          <h1 className="font-syne text-3xl font-extrabold text-[#1a1a2e]">TradeCraft</h1>
+          <p className="text-[#555560] text-sm mt-2">Find trusted tradespeople near you</p>
+        </div>
+
+        <div className="text-center mb-6">
+          <h2 className="font-syne text-xl font-bold">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
           <p className="text-[#555560] text-sm mt-1">
             {isLogin ? 'Sign in to post and manage jobs' : 'Join TradeCraft to start posting jobs'}
           </p>
@@ -66,7 +87,8 @@ export default function Login() {
               </label>
               <input
                 type="text"
-                className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 outline-none"
+                className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 outline-none transition-all"
+                placeholder="John Doe"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -80,7 +102,8 @@ export default function Login() {
             </label>
             <input
               type="email"
-              className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 outline-none"
+              className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 outline-none transition-all"
+              placeholder="you@example.com"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
@@ -93,7 +116,8 @@ export default function Login() {
             </label>
             <input
               type="password"
-              className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 outline-none"
+              className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 outline-none transition-all"
+              placeholder="••••••••"
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
@@ -107,7 +131,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#e8532a] text-white font-medium py-2.5 rounded-xl hover:bg-[#d44420] transition-all disabled:opacity-70"
+            className="w-full bg-[#e8532a] text-white font-semibold py-3 rounded-xl hover:bg-[#d44420] transition-all disabled:opacity-70 shadow-md"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
@@ -127,16 +151,19 @@ export default function Login() {
               setError('');
               setFormData({ name: '', email: '', password: '' });
             }}
-            className="text-sm text-[#e8532a] hover:underline"
+            className="text-sm text-[#e8532a] hover:underline font-medium"
           >
             {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
           </button>
         </div>
 
-        <div className="mt-4 pt-4 border-t border-black/10">
-          <p className="text-xs text-[#888896] text-center">
-            Demo account: demo@tradecraft.com / password123
-          </p>
+        {/* Demo credentials */}
+        <div className="mt-6 pt-4 border-t border-black/10">
+          <p className="text-xs text-[#888896] text-center mb-2">Demo Account:</p>
+          <div className="text-xs text-center space-y-1">
+            <p className="text-[#555560]">Email: <span className="font-mono">demo@tradecraft.com</span></p>
+            <p className="text-[#555560]">Password: <span className="font-mono">password123</span></p>
+          </div>
         </div>
       </div>
     </div>

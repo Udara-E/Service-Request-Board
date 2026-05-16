@@ -1,3 +1,4 @@
+// components/Navbar.jsx
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -6,6 +7,11 @@ import { useAuth } from '@/app/context/AuthContext';
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  
+  // Don't show navbar on login page
+  if (pathname === '/login') {
+    return null;
+  }
   
   return (
     <nav className="bg-[#1a1a2e] px-8 h-14 flex items-center justify-between sticky top-0 z-50">
@@ -32,15 +38,12 @@ export default function Navbar() {
             >
               + Post a Job
             </Link>
-            <div className="flex items-center gap-2 ml-2">
-              <span className="text-white/70 text-sm">{user.name}</span>
-              <button
-                onClick={logout}
-                className="text-sm font-medium px-3 py-1.5 rounded-md bg-white/10 text-white/85 hover:bg-white/20 transition-all"
-              >
-                Logout
-              </button>
-            </div>
+            <button
+              onClick={logout}
+              className="text-sm font-medium px-3 py-1.5 rounded-md bg-white/10 text-white/85 hover:bg-white/20 transition-all ml-2"
+            >
+              Logout
+            </button>
           </>
         ) : (
           <Link
