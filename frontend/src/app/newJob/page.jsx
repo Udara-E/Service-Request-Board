@@ -1,180 +1,412 @@
 'use client';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function NewJob() {
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     title: '',
-    desc: '',
+    description: '',
     category: '',
     location: '',
     budget: '',
-    postedBy: ''
+    postedBy: '',
+    contactName: '',
+    contactEmail: ''
   });
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const categories = ['Plumbing', 'Electrical', 'Carpentry', 'Painting', 'Roofing', 'HVAC', 'Gardening', 'Cleaning', 'Other'];
+  const categories = [
+    'Plumbing',
+    'Electrical',
+    'Carpentry',
+    'Painting',
+    'Roofing',
+    'HVAC',
+    'Gardening',
+    'Cleaning',
+    'Other'
+  ];
 
   const validate = () => {
     const newErrors = {};
-    if (formData.title.length < 5) newErrors.title = 'Please enter a job title (at least 5 characters)';
-    if (formData.desc.length < 20) newErrors.desc = 'Please describe the job (at least 20 characters)';
-    if (!formData.category) newErrors.category = 'Please select a category';
-    if (formData.location.length < 2) newErrors.location = 'Please enter a location';
-    if (formData.postedBy.length < 2) newErrors.postedBy = 'Please enter your name';
+
+    if (formData.title.trim().length < 5) {
+      newErrors.title =
+        'Please enter a job title (at least 5 characters)';
+    }
+
+    if (formData.description.trim().length < 20) {
+      newErrors.description =
+        'Please describe the job (at least 20 characters)';
+    }
+
+    if (!formData.category) {
+      newErrors.category =
+        'Please select a category';
+    }
+
+    if (formData.location.trim().length < 2) {
+      newErrors.location =
+        'Please enter a location';
+    }
+
+    if (formData.postedBy.trim().length < 2) {
+      newErrors.postedBy =
+        'Please enter your name';
+    }
+
+    if (
+      formData.contactEmail.trim().length < 5
+    ) {
+      newErrors.contactEmail =
+        'Please enter your email';
+    }
+
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+
+    return (
+      Object.keys(newErrors).length === 0
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!validate()) return;
 
-    setIsSubmitting(true);
-    
-    setTimeout(() => {
-      const newJob = {
-        id: 'j' + Date.now(),
-        ...formData,
-        status: 'open',
-        createdAt: new Date().toISOString()
-      };
-      
-      const stored = localStorage.getItem('tradecraft_jobs');
-      const jobs = stored ? JSON.parse(stored) : [];
-      jobs.unshift(newJob);
-      localStorage.setItem('tradecraft_jobs', JSON.stringify(jobs));
-      
-      setIsSubmitting(false);
+    try {
+      setIsSubmitting(true);
+
+      const response = await fetch(
+        'http://localhost:5000/api/jobs',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type':
+              'application/json'
+          },
+          body: JSON.stringify({
+            title: formData.title,
+            description:
+              formData.description,
+            category: formData.category,
+            location: formData.location,
+            budget: formData.budget,
+            postedBy: formData.postedBy,
+            contactName:
+              formData.contactName,
+            contactEmail:
+              formData.contactEmail
+          })
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            'Failed to create job'
+        );
+      }
+
       router.push('/');
-    }, 800);
+    } catch (error) {
+      console.log(error);
+      alert(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
+  const updateField = (
+    field,
+    value
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value
+    }));
+
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto px-8 py-8">
       <div className="mb-8">
-        <h2 className="font-syne text-2xl font-extrabold tracking-tight mb-1">Post a new job request</h2>
-        <p className="text-[#555560] text-sm">Tell tradespeople what you need — they'll reach out with quotes.</p>
+        <h2 className="font-syne text-2xl font-extrabold tracking-tight mb-1">
+          Post a new job request
+        </h2>
+
+        <p className="text-[#555560] text-sm">
+          Tell tradespeople what you
+          need — they'll reach out with
+          quotes.
+        </p>
       </div>
-      
-      <form onSubmit={handleSubmit} className="bg-white border border-black/10 rounded-2xl p-8">
+
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white border border-black/10 rounded-2xl p-8"
+      >
+        {/* TITLE */}
         <div className="mb-5">
           <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
-            Job Title <span className="text-[#e8532a]">*</span>
+            Job Title{' '}
+            <span className="text-[#e8532a]">
+              *
+            </span>
           </label>
+
           <input
             type="text"
-            className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 ${errors.title ? 'border-red-500' : 'border-black/20'}`}
             placeholder="e.g. Leaking kitchen tap needs fixing"
             value={formData.title}
-            onChange={(e) => updateField('title', e.target.value)}
+            onChange={(e) =>
+              updateField(
+                'title',
+                e.target.value
+              )
+            }
+            className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 ${
+              errors.title
+                ? 'border-red-500'
+                : 'border-black/20'
+            }`}
           />
-          {errors.title && <div className="text-red-500 text-xs mt-1">{errors.title}</div>}
+
+          {errors.title && (
+            <div className="text-red-500 text-xs mt-1">
+              {errors.title}
+            </div>
+          )}
         </div>
-        
+
+        {/* DESCRIPTION */}
         <div className="mb-5">
           <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
-            Description <span className="text-[#e8532a]">*</span>
+            Description{' '}
+            <span className="text-[#e8532a]">
+              *
+            </span>
           </label>
+
           <textarea
             rows={4}
-            className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 resize-y ${errors.desc ? 'border-red-500' : 'border-black/20'}`}
-            placeholder="Describe the problem in detail — what's broken, how urgent it is, access notes, etc."
-            value={formData.desc}
-            onChange={(e) => updateField('desc', e.target.value)}
+            placeholder="Describe the problem in detail"
+            value={formData.description}
+            onChange={(e) =>
+              updateField(
+                'description',
+                e.target.value
+              )
+            }
+            className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all resize-y focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 ${
+              errors.description
+                ? 'border-red-500'
+                : 'border-black/20'
+            }`}
           />
-          {errors.desc && <div className="text-red-500 text-xs mt-1">{errors.desc}</div>}
+
+          {errors.description && (
+            <div className="text-red-500 text-xs mt-1">
+              {errors.description}
+            </div>
+          )}
         </div>
-        
+
+        {/* CATEGORY + LOCATION */}
         <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
             <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
-              Category <span className="text-[#e8532a]">*</span>
+              Category{' '}
+              <span className="text-[#e8532a]">
+                *
+              </span>
             </label>
+
             <select
-              className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 appearance-none pr-8 bg-no-repeat bg-right_12px_center ${errors.category ? 'border-red-500' : 'border-black/20'}`}
-              style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")` }}
               value={formData.category}
-              onChange={(e) => updateField('category', e.target.value)}
+              onChange={(e) =>
+                updateField(
+                  'category',
+                  e.target.value
+                )
+              }
+              className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all ${
+                errors.category
+                  ? 'border-red-500'
+                  : 'border-black/20'
+              }`}
             >
-              <option value="">Select a category</option>
-              {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              <option value="">
+                Select a category
+              </option>
+
+              {categories.map((cat) => (
+                <option
+                  key={cat}
+                  value={cat}
+                >
+                  {cat}
+                </option>
+              ))}
             </select>
-            {errors.category && <div className="text-red-500 text-xs mt-1">{errors.category}</div>}
+
+            {errors.category && (
+              <div className="text-red-500 text-xs mt-1">
+                {errors.category}
+              </div>
+            )}
           </div>
+
           <div>
             <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
-              Location <span className="text-[#e8532a]">*</span>
+              Location{' '}
+              <span className="text-[#e8532a]">
+                *
+              </span>
             </label>
+
             <input
               type="text"
-              className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 ${errors.location ? 'border-red-500' : 'border-black/20'}`}
-              placeholder="e.g. Glasgow, Scotland"
+              placeholder="e.g. Colombo"
               value={formData.location}
-              onChange={(e) => updateField('location', e.target.value)}
+              onChange={(e) =>
+                updateField(
+                  'location',
+                  e.target.value
+                )
+              }
+              className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all ${
+                errors.location
+                  ? 'border-red-500'
+                  : 'border-black/20'
+              }`}
             />
-            {errors.location && <div className="text-red-500 text-xs mt-1">{errors.location}</div>}
+
+            {errors.location && (
+              <div className="text-red-500 text-xs mt-1">
+                {errors.location}
+              </div>
+            )}
           </div>
         </div>
-        
+
+        {/* BUDGET + NAME */}
         <div className="grid grid-cols-2 gap-4 mb-5">
           <div>
-            <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">Budget (optional)</label>
+            <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
+              Budget
+            </label>
+
             <input
               type="text"
-              className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl bg-white text-[#111118] outline-none focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10"
-              placeholder="e.g. £150–£200"
+              placeholder="e.g. Rs. 15,000"
               value={formData.budget}
-              onChange={(e) => updateField('budget', e.target.value)}
+              onChange={(e) =>
+                updateField(
+                  'budget',
+                  e.target.value
+                )
+              }
+              className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl bg-white text-[#111118] outline-none focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10"
             />
           </div>
+
           <div>
             <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
-              Your Name <span className="text-[#e8532a]">*</span>
+              Your Name{' '}
+              <span className="text-[#e8532a]">
+                *
+              </span>
             </label>
+
             <input
               type="text"
-              className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10 ${errors.postedBy ? 'border-red-500' : 'border-black/20'}`}
-              placeholder="e.g. Sarah M."
+              placeholder="e.g. John"
               value={formData.postedBy}
-              onChange={(e) => updateField('postedBy', e.target.value)}
+              onChange={(e) =>
+                updateField(
+                  'postedBy',
+                  e.target.value
+                )
+              }
+              className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all ${
+                errors.postedBy
+                  ? 'border-red-500'
+                  : 'border-black/20'
+              }`}
             />
-            {errors.postedBy && <div className="text-red-500 text-xs mt-1">{errors.postedBy}</div>}
+
+            {errors.postedBy && (
+              <div className="text-red-500 text-xs mt-1">
+                {errors.postedBy}
+              </div>
+            )}
           </div>
         </div>
-        
-        <hr className="border-t border-black/10 my-6" />
-        
+
+        {/* EMAIL */}
+        <div className="mb-6">
+          <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
+            Contact Email{' '}
+            <span className="text-[#e8532a]">
+              *
+            </span>
+          </label>
+
+          <input
+            type="email"
+            placeholder="e.g. john@gmail.com"
+            value={formData.contactEmail}
+            onChange={(e) =>
+              updateField(
+                'contactEmail',
+                e.target.value
+              )
+            }
+            className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all ${
+              errors.contactEmail
+                ? 'border-red-500'
+                : 'border-black/20'
+            }`}
+          />
+
+          {errors.contactEmail && (
+            <div className="text-red-500 text-xs mt-1">
+              {errors.contactEmail}
+            </div>
+          )}
+        </div>
+
+        {/* BUTTONS */}
         <div className="flex gap-3">
           <button
             type="submit"
             disabled={isSubmitting}
             className="flex items-center gap-2 bg-[#e8532a] text-white font-medium px-6 py-2.5 rounded-xl hover:bg-[#d44420] transition-all disabled:opacity-70"
           >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Posting...
-              </>
-            ) : (
-              <>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M12 5v14M5 12l7 7 7-7" />
-                </svg>
-                Post Job Request
-              </>
-            )}
+            {isSubmitting
+              ? 'Posting...'
+              : 'Post Job Request'}
           </button>
+
           <button
             type="button"
-            onClick={() => router.push('/')}
+            onClick={() =>
+              router.push('/')
+            }
             className="border border-black/20 bg-transparent text-[#555560] font-medium px-6 py-2.5 rounded-xl hover:bg-[#f0ede8] transition-all"
           >
             Cancel

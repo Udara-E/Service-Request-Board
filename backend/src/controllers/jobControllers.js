@@ -1,17 +1,25 @@
+// controllers/jobController.js
+
 import Job from '../models/Job.js';
 
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find().sort({ createdAt: -1 });
+    const filter = {};
 
-    res.json({
-      success: true,
-      data: jobs
-    });
+    if (req.query.category) {
+      filter.category = req.query.category;
+    }
+
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    const jobs = await Job.find(filter).sort({ createdAt: -1 });
+
+    res.status(200).json(jobs);
   } catch (error) {
     res.status(500).json({
-      success: false,
-      error: error.message
+      message: error.message
     });
   }
 };
@@ -22,38 +30,55 @@ export const getJob = async (req, res) => {
 
     if (!job) {
       return res.status(404).json({
-        success: false,
-        error: 'Job not found'
+        message: 'Job not found'
       });
     }
 
-    res.json({
-      success: true,
-      data: job
-    });
+    res.status(200).json(job);
   } catch (error) {
     res.status(500).json({
-      success: false,
-      error: error.message
+      message: error.message
     });
   }
 };
 
 export const createJob = async (req, res) => {
   try {
+    const {
+      title,
+      description,
+      category,
+      location,
+      contactName,
+      contactEmail
+    } = req.body;
+
+    if (
+      !title ||
+      !description ||
+      !category ||
+      !location ||
+      !contactName ||
+      !contactEmail
+    ) {
+      return res.status(400).json({
+        message: 'All required fields must be filled'
+      });
+    }
+
     const job = await Job.create({
-      ...req.body,
-      user: req.user
+      title,
+      description,
+      category,
+      location,
+      contactName,
+      contactEmail
     });
 
-    res.status(201).json({
-      success: true,
-      data: job
-    });
+    res.status(201).json(job);
   } catch (error) {
     res.status(500).json({
-      success: false,
-      error: error.message
+      message: error.message
     });
   }
 };
@@ -68,30 +93,36 @@ export const updateJobStatus = async (req, res) => {
       { new: true }
     );
 
-    res.json({
-      success: true,
-      data: job
-    });
+    if (!job) {
+      return res.status(404).json({
+        message: 'Job not found'
+      });
+    }
+
+    res.status(200).json(job);
   } catch (error) {
     res.status(500).json({
-      success: false,
-      error: error.message
+      message: error.message
     });
   }
 };
 
 export const deleteJob = async (req, res) => {
   try {
-    await Job.findByIdAndDelete(req.params.id);
+    const job = await Job.findByIdAndDelete(req.params.id);
 
-    res.json({
-      success: true,
-      message: 'Job deleted'
+    if (!job) {
+      return res.status(404).json({
+        message: 'Job not found'
+      });
+    }
+
+    res.status(200).json({
+      message: 'Job deleted successfully'
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
-      error: error.message
+      message: error.message
     });
   }
 };

@@ -1,136 +1,195 @@
-// app/home/page.jsx
 'use client';
+
 import { useState, useEffect } from 'react';
 import JobCard from '@/components/JobCard';
 import { useAuth } from '../context/AuthContext';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 export default function HomePage() {
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
+
+  // ✅ FIX: proper loading state (this was your bug)
   const [loading, setLoading] = useState(true);
+
+  const [error, setError] = useState('');
+
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
   const { token } = useAuth();
 
+  // =========================
+  // FETCH JOBS
+  // =========================
   useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        setError('');
+
+        const response = await fetch(`${API_URL}/jobs`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch jobs');
+        }
+
+        const data = await response.json();
+
+        setJobs(data);
+        setFilteredJobs(data);
+      } catch (err) {
+        console.log(err);
+        setError('Failed to load jobs');
+      } finally {
+        setLoading(false); // ✅ CRITICAL FIX
+      }
+    };
+
     fetchJobs();
   }, []);
 
-  const fetchJobs = async () => {
-    try {
-      const res = await fetch(`${API_URL}/jobs`);
-      const data = await res.json();
-      if (data.success) {
-        setJobs(data.data);
-        setFilteredJobs(data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // =========================
+  // FILTER LOGIC
+  // =========================
   useEffect(() => {
-    filterJobs();
-  }, [searchTerm, categoryFilter, statusFilter, jobs]);
-
-  const filterJobs = () => {
     let filtered = [...jobs];
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(j => 
-        j.title.toLowerCase().includes(term) || 
-        j.desc.toLowerCase().includes(term)
+
+      filtered = filtered.filter(
+        (job) =>
+          job.title?.toLowerCase().includes(term) ||
+          job.desc?.toLowerCase().includes(term)
       );
     }
+
     if (categoryFilter) {
-      filtered = filtered.filter(j => j.category === categoryFilter);
+      filtered = filtered.filter(
+        (job) => job.category === categoryFilter
+      );
     }
+
     if (statusFilter) {
-      filtered = filtered.filter(j => j.status === statusFilter);
+      filtered = filtered.filter(
+        (job) => job.status === statusFilter
+      );
     }
+
     setFilteredJobs(filtered);
+  }, [searchTerm, categoryFilter, statusFilter, jobs]);
+
+  const categories = [
+    'Plumbing',
+    'Electrical',
+    'Carpentry',
+    'Painting',
+    'Roofing',
+    'HVAC',
+    'Gardening',
+    'Cleaning',
+    'Other'
+  ];
+
+  const statuses = ['open', 'inprogress', 'closed'];
+
+  const statusLabels = {
+    open: 'Open',
+    inprogress: 'In Progress',
+    closed: 'Closed'
   };
 
-  const categories = ['Plumbing', 'Electrical', 'Carpentry', 'Painting', 'Roofing', 'HVAC', 'Gardening', 'Cleaning', 'Other'];
-  const statuses = ['open', 'inprogress', 'closed'];
-  const statusLabels = { open: 'Open', inprogress: 'In Progress', closed: 'Closed' };
-
+  // =========================
+  // LOADING UI (FIXED SAFE CHECK)
+  // =========================
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-3 border-[#e8532a]/30 border-t-[#e8532a] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#e8532a]/30 border-t-[#e8532a] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
     <div>
-      {/* Hero Section */}
+      {/* ================= HERO ================= */}
       <div className="bg-[#1a1a2e] px-8 py-12 text-white">
-        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight mb-2">
+        <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
           Find trusted tradespeople<br />near you
         </h1>
-        <p className="text-white/60 text-base mb-6">
-          Browse service requests or post your own — plumbers, electricians, builders & more.
+
+        <p className="text-white/60 mb-6">
+          Browse service requests or post your own.
         </p>
-        <div className="flex items-center gap-3 bg-white/10 border border-white/15 rounded-xl px-4 py-2 max-w-md">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
+
+        {/* SEARCH */}
+        <div className="flex items-center gap-3 bg-white/10 border border-white/20 rounded-xl px-4 py-2 max-w-md">
           <input
             type="text"
-            placeholder="Search job title or description..."
-            className="bg-transparent border-none outline-none text-white placeholder-white/40 flex-1 text-sm"
+            placeholder="Search jobs..."
+            className="bg-transparent outline-none text-white placeholder-white/50 w-full"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 px-8 py-5 bg-white border-b border-black/10">
-        <span className="text-xs font-medium text-[#888896] uppercase tracking-wide">Filter by</span>
+      {/* ================= FILTERS ================= */}
+      <div className="flex flex-wrap gap-3 px-8 py-5 bg-white border-b">
         <select
-          className="text-sm px-3 py-1.5 border border-black/20 rounded-md bg-white text-[#111118] cursor-pointer appearance-none pr-7 bg-no-repeat bg-right_10px_center"
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")` }}
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
+          className="border px-3 py-2 rounded-md"
         >
           <option value="">All Categories</option>
-          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
         </select>
+
         <select
-          className="text-sm px-3 py-1.5 border border-black/20 rounded-md bg-white text-[#111118] cursor-pointer appearance-none pr-7 bg-no-repeat bg-right_10px_center"
-          style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")` }}
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
+          className="border px-3 py-2 rounded-md"
         >
-          <option value="">All Statuses</option>
-          {statuses.map(s => <option key={s} value={s}>{statusLabels[s]}</option>)}
+          <option value="">All Status</option>
+          {statuses.map((s) => (
+            <option key={s} value={s}>
+              {statusLabels[s]}
+            </option>
+          ))}
         </select>
-        <span className="text-xs text-[#888896] ml-auto">
-          {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} found
+
+        <span className="ml-auto text-sm text-gray-500">
+          {filteredJobs.length} jobs found
         </span>
       </div>
 
-      {/* Jobs Grid */}
+      {/* ================= ERROR ================= */}
+      {error && (
+        <div className="px-8 py-4 text-red-600">{error}</div>
+      )}
+
+      {/* ================= JOB LIST ================= */}
       <div className="p-8">
         {filteredJobs.length === 0 ? (
-          <div className="text-center py-16 text-[#888896]">
-            <div className="text-4xl mb-3 opacity-30">📋</div>
-            <h3 className="font-syne font-bold text-base text-[#555560] mb-1">No jobs found</h3>
-            <p className="text-sm">Try adjusting your filters or search terms</p>
+          <div className="text-center text-gray-500 py-16">
+            No jobs found
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredJobs.map((job, idx) => (
-              <JobCard key={job._id || job.id} job={job} index={idx} />
+              <JobCard
+                key={job._id || job.id}
+                job={job}
+                index={idx}
+              />
             ))}
           </div>
         )}

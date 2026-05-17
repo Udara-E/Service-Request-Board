@@ -1,15 +1,19 @@
+// models/Job.js
+
 import mongoose from 'mongoose';
 
 const jobSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
-    desc: {
+    description: {
       type: String,
-      required: true
+      required: true,
+      trim: true
     },
 
     category: {
@@ -22,24 +26,21 @@ const jobSchema = new mongoose.Schema(
       required: true
     },
 
-    budget: {
-      type: String
-    },
-
-    postedBy: {
+    contactName: {
       type: String,
       required: true
     },
 
-    status: {
+    contactEmail: {
       type: String,
-      enum: ['open', 'inprogress', 'closed'],
-      default: 'open'
+      required: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
     },
 
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+    status: {
+      type: String,
+      enum: ['Open', 'In Progress', 'Closed'],
+      default: 'Open'
     }
   },
   {

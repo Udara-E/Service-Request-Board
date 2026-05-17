@@ -11,12 +11,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="bg-[#f7f6f3] antialiased">
-        <AuthProvider>
+         <AuthProvider>
           <Navbar />
           <main className="min-h-screen">
             {children}
           </main>
         </AuthProvider>
+       
       </body>
     </html>
   );

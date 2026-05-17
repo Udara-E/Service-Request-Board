@@ -9,12 +9,13 @@ export default function MainPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
+ useEffect(() => {
+  if (loading) return;
 
+  if (!user) {
+    router.replace('/login');
+  }
+}, [user, loading,router]);
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
