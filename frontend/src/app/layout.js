@@ -3,7 +3,7 @@ import Navbar from '@/components/Navbar';
 import { AuthProvider } from './context/AuthContext';
 
 export const metadata = {
-  title: 'TradeCraft - Find Trusted Tradespeople',
+  title: 'QuickFix',
   description: 'Browse service requests or post your own — plumbers, electricians, builders & more.',
 };
 

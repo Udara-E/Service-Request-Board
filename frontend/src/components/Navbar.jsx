@@ -16,8 +16,8 @@ export default function Navbar() {
   return (
     <nav className="bg-[#1a1a2e] px-8 h-14 flex items-center justify-between sticky top-0 z-50">
       <Link href="/" className="font-syne text-lg font-extrabold text-white tracking-tight flex items-center gap-2">
-        <div className="w-2 h-2 rounded-full bg-[#e8532a]" />
-        TradeCraft
+        <div className="w-2 h-2 rounded-full bg-[#2a66e8]" />
+        QuickFix
       </Link>
       <div className="flex items-center gap-2">
         <Link
@@ -34,7 +34,7 @@ export default function Navbar() {
           <>
             <Link
               href="/newJob"
-              className="text-sm font-medium px-4 py-1.5 rounded-md bg-[#e8532a] text-white hover:bg-[#d44420] transition-all"
+              className="text-sm font-medium px-4 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-800 transition-all"
             >
               + Post a Job
             </Link>

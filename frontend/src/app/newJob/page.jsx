@@ -22,8 +22,13 @@ export default function NewJob() {
   const categories = [
     'Plumbing',
     'Electrical',
+    'Carpentry',
     'Painting',
-    'Joinery'
+    'Roofing',
+    'HVAC',
+    'Gardening',
+    'Cleaning',
+    'Other'
   ];
 
   const validate = () => {
@@ -384,7 +389,7 @@ export default function NewJob() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 bg-[#e8532a] text-white font-medium px-6 py-2.5 rounded-xl hover:bg-[#d44420] transition-all disabled:opacity-70"
+            className="flex items-center gap-2 bg-blue-600 text-white font-medium px-6 py-2.5 rounded-xl hover:bg-blue-800 transition-all disabled:opacity-70"
           >
             {isSubmitting
               ? 'Posting...'
