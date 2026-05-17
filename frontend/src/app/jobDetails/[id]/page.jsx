@@ -1,54 +1,90 @@
-// app/jobDetails/[id]/page.jsx
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 
-export default function JobDetails({ params }) {
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
+export default function JobDetails() {
   const router = useRouter();
-  const [job, setJob] = useState(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const { id } = params;
+  const params = useParams();
+  const id = params.id;
 
+  const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // ================= FETCH JOB FROM BACKEND =================
   useEffect(() => {
-    const stored = localStorage.getItem('tradecraft_jobs');
-    const jobs = stored ? JSON.parse(stored) : [];
-    const found = jobs.find(j => j.id === id);
-    if (found) {
-      setJob(found);
-    } else {
-      router.push('/');
-    }
+    const fetchJob = async () => {
+      try {
+        setLoading(true);
+
+        const res = await fetch(`${API_URL}/jobs/${id}`);
+
+        if (!res.ok) {
+          throw new Error('Job not found');
+        }
+
+        const data = await res.json();
+        setJob(data);
+      } catch (err) {
+        console.log(err);
+        router.push('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) fetchJob();
   }, [id, router]);
 
-  const updateStatus = (newStatus) => {
-    if (!job) return;
-    const stored = localStorage.getItem('tradecraft_jobs');
-    const jobs = stored ? JSON.parse(stored) : [];
-    const index = jobs.findIndex(j => j.id === id);
-    if (index !== -1) {
-      jobs[index].status = newStatus;
-      localStorage.setItem('tradecraft_jobs', JSON.stringify(jobs));
-      setJob({ ...job, status: newStatus });
+  // ================= UPDATE STATUS =================
+// In JobDetails page, update the updateStatus function to also update local storage or use a callback
+const updateStatus = async (newStatus) => {
+  try {
+    const res = await fetch(`${API_URL}/jobs/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    if (res.ok) {
+      setJob((prev) => ({ ...prev, status: newStatus }));
+      
+      // Option 1: Store update timestamp to trigger refresh on home page
+      localStorage.setItem('jobStatusUpdated', Date.now().toString());
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+  // ================= DELETE JOB =================
+  const deleteJob = async () => {
+    try {
+      await fetch(`${API_URL}/jobs/${id}`, {
+        method: 'DELETE'
+      });
+
+      router.push('/');
+    } catch (err) {
+      console.log(err);
     }
   };
 
-  const deleteJob = () => {
-    const stored = localStorage.getItem('tradecraft_jobs');
-    const jobs = stored ? JSON.parse(stored) : [];
-    const filtered = jobs.filter(j => j.id !== id);
-    localStorage.setItem('tradecraft_jobs', JSON.stringify(filtered));
-    router.push('/');
-  };
-
-  if (!job) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-3 border-[#e8532a]/30 border-t-[#e8532a] rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#e8532a]/30 border-t-[#e8532a] rounded-full animate-spin" />
       </div>
     );
   }
 
+  if (!job) return null;
   const statusColors = {
     open: { bg: 'bg-green-50', text: 'text-green-700', label: '● Open' },
     inprogress: { bg: 'bg-amber-50', text: 'text-amber-700', label: '◐ In Progress' },
@@ -71,6 +107,7 @@ export default function JobDetails({ params }) {
     return colors[category] || 'bg-slate-500';
   };
 
+  
   return (
     <div className="max-w-2xl mx-auto px-8 py-8">
       <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-[#555560] hover:text-[#111118] mb-6">
@@ -93,7 +130,7 @@ export default function JobDetails({ params }) {
             </span>
           </div>
           <h2 className="font-syne text-2xl font-extrabold tracking-tight mb-3">{job.title}</h2>
-          <p className="text-[#555560] text-base leading-relaxed">{job.desc}</p>
+          <p className="text-[#555560] text-base leading-relaxed">{job.description}</p>
         </div>
         
         <div className="grid grid-cols-3 border-b border-black/10">
@@ -124,7 +161,7 @@ export default function JobDetails({ params }) {
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              {job.postedBy}
+              {job.contactName}
             </div>
           </div>
         </div>
@@ -143,12 +180,12 @@ export default function JobDetails({ params }) {
             </div>
           </div>
           <div className="p-5">
-            <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">Job ID</div>
+            <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">name</div>
             <div className="text-xs font-mono text-[#888896] flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4h16v16H4z" />
               </svg>
-              {job.id}
+              {job.contactName}
             </div>
           </div>
         </div>

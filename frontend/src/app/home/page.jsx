@@ -10,12 +10,8 @@ const API_URL =
 export default function HomePage() {
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
-
-  // ✅ FIX: proper loading state (this was your bug)
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState('');
-
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');

@@ -50,7 +50,9 @@ export const createJob = async (req, res) => {
       category,
       location,
       contactName,
-      contactEmail
+      contactEmail,
+      budget,
+      postedBy
     } = req.body;
 
     if (
@@ -72,7 +74,9 @@ export const createJob = async (req, res) => {
       category,
       location,
       contactName,
-      contactEmail
+      contactEmail,
+      budget,
+      postedBy
     });
 
     res.status(201).json(job);
@@ -82,7 +86,6 @@ export const createJob = async (req, res) => {
     });
   }
 };
-
 export const updateJobStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -126,3 +129,4 @@ export const deleteJob = async (req, res) => {
     });
   }
 };
+

@@ -47,7 +47,7 @@ export default function JobCard({ job, index }) {
           <h3 className="font-syne text-sm font-bold leading-tight text-[#111118] line-clamp-2">{job.title}</h3>
           {getStatusBadge(job.status)}
         </div>
-        <p className="text-[13px] text-[#555560] mb-3 line-clamp-2">{job.desc}</p>
+        <p className="text-[13px] text-[#555560] mb-3 line-clamp-2">{job.description}</p>
         <div className="flex items-center gap-4 text-xs text-[#888896]">
           <span className="flex items-center gap-1">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -11,25 +11,19 @@ export default function NewJob() {
     description: '',
     category: '',
     location: '',
-    budget: '',
-    postedBy: '',
     contactName: '',
     contactEmail: ''
   });
 
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   const categories = [
     'Plumbing',
     'Electrical',
-    'Carpentry',
     'Painting',
-    'Roofing',
-    'HVAC',
-    'Gardening',
-    'Cleaning',
-    'Other'
+    'Joinery'
   ];
 
   const validate = () => {
@@ -40,7 +34,9 @@ export default function NewJob() {
         'Please enter a job title (at least 5 characters)';
     }
 
-    if (formData.description.trim().length < 20) {
+    if (
+      formData.description.trim().length < 20
+    ) {
       newErrors.description =
         'Please describe the job (at least 20 characters)';
     }
@@ -55,16 +51,23 @@ export default function NewJob() {
         'Please enter a location';
     }
 
-    if (formData.postedBy.trim().length < 2) {
-      newErrors.postedBy =
-        'Please enter your name';
+    if (
+      formData.contactName.trim().length < 2
+    ) {
+      newErrors.contactName =
+        'Please enter contact name';
     }
 
+    const emailRegex =
+      /^\S+@\S+\.\S+$/;
+
     if (
-      formData.contactEmail.trim().length < 5
+      !emailRegex.test(
+        formData.contactEmail
+      )
     ) {
       newErrors.contactEmail =
-        'Please enter your email';
+        'Please enter a valid email';
     }
 
     setErrors(newErrors);
@@ -96,12 +99,11 @@ export default function NewJob() {
               formData.description,
             category: formData.category,
             location: formData.location,
-            budget: formData.budget,
-            postedBy: formData.postedBy,
             contactName:
               formData.contactName,
             contactEmail:
               formData.contactEmail
+            
           })
         }
       );
@@ -110,7 +112,7 @@ export default function NewJob() {
 
       if (!response.ok) {
         throw new Error(
-          data.error ||
+          data.message ||
             'Failed to create job'
         );
       }
@@ -171,7 +173,7 @@ export default function NewJob() {
           <input
             type="text"
             placeholder="e.g. Leaking kitchen tap needs fixing"
-            value={formData.title}
+            value={formData.title || ''}
             onChange={(e) =>
               updateField(
                 'title',
@@ -204,7 +206,9 @@ export default function NewJob() {
           <textarea
             rows={4}
             placeholder="Describe the problem in detail"
-            value={formData.description}
+            value={
+              formData.description || ''
+            }
             onChange={(e) =>
               updateField(
                 'description',
@@ -236,7 +240,7 @@ export default function NewJob() {
             </label>
 
             <select
-              value={formData.category}
+              value={formData.category || ''}
               onChange={(e) =>
                 updateField(
                   'category',
@@ -280,8 +284,8 @@ export default function NewJob() {
 
             <input
               type="text"
-              placeholder="e.g. Colombo"
-              value={formData.location}
+              placeholder="e.g. Glasgow"
+              value={formData.location || ''}
               onChange={(e) =>
                 updateField(
                   'location',
@@ -303,62 +307,43 @@ export default function NewJob() {
           </div>
         </div>
 
-        {/* BUDGET + NAME */}
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          <div>
-            <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
-              Budget
-            </label>
+        {/* CONTACT NAME */}
+        <div className="mb-5">
+          <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
+            Contact Name{' '}
+            <span className="text-[#e8532a]">
+              *
+            </span>
+          </label>
 
-            <input
-              type="text"
-              placeholder="e.g. Rs. 15,000"
-              value={formData.budget}
-              onChange={(e) =>
-                updateField(
-                  'budget',
-                  e.target.value
-                )
-              }
-              className="w-full text-sm px-4 py-2.5 border border-black/20 rounded-xl bg-white text-[#111118] outline-none focus:border-[#e8532a] focus:ring-2 focus:ring-[#e8532a]/10"
-            />
-          </div>
+          <input
+            type="text"
+            placeholder="e.g. John"
+            value={
+              formData.contactName || ''
+            }
+            onChange={(e) =>
+              updateField(
+                'contactName',
+                e.target.value
+              )
+            }
+            className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all ${
+              errors.contactName
+                ? 'border-red-500'
+                : 'border-black/20'
+            }`}
+          />
 
-          <div>
-            <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
-              Your Name{' '}
-              <span className="text-[#e8532a]">
-                *
-              </span>
-            </label>
-
-            <input
-              type="text"
-              placeholder="e.g. John"
-              value={formData.postedBy}
-              onChange={(e) =>
-                updateField(
-                  'postedBy',
-                  e.target.value
-                )
-              }
-              className={`w-full text-sm px-4 py-2.5 border rounded-xl bg-white text-[#111118] outline-none transition-all ${
-                errors.postedBy
-                  ? 'border-red-500'
-                  : 'border-black/20'
-              }`}
-            />
-
-            {errors.postedBy && (
-              <div className="text-red-500 text-xs mt-1">
-                {errors.postedBy}
-              </div>
-            )}
-          </div>
+          {errors.contactName && (
+            <div className="text-red-500 text-xs mt-1">
+              {errors.contactName}
+            </div>
+          )}
         </div>
 
         {/* EMAIL */}
-        <div className="mb-6">
+        <div className="mb-5">
           <label className="block text-xs font-medium text-[#555560] uppercase tracking-wide mb-2">
             Contact Email{' '}
             <span className="text-[#e8532a]">
@@ -369,7 +354,9 @@ export default function NewJob() {
           <input
             type="email"
             placeholder="e.g. john@gmail.com"
-            value={formData.contactEmail}
+            value={
+              formData.contactEmail || ''
+            }
             onChange={(e) =>
               updateField(
                 'contactEmail',
@@ -389,6 +376,8 @@ export default function NewJob() {
             </div>
           )}
         </div>
+
+    
 
         {/* BUTTONS */}
         <div className="flex gap-3">
