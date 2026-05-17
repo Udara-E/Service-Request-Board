@@ -15,18 +15,12 @@ export default function JobDetails() {
   const [loading, setLoading] = useState(true);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // ================= FETCH JOB FROM BACKEND =================
   useEffect(() => {
     const fetchJob = async () => {
       try {
         setLoading(true);
-
         const res = await fetch(`${API_URL}/jobs/${id}`);
-
-        if (!res.ok) {
-          throw new Error('Job not found');
-        }
-
+        if (!res.ok) throw new Error('Job not found');
         const data = await res.json();
         setJob(data);
       } catch (err) {
@@ -36,40 +30,28 @@ export default function JobDetails() {
         setLoading(false);
       }
     };
-
     if (id) fetchJob();
   }, [id, router]);
 
-  // ================= UPDATE STATUS =================
-// In JobDetails page, update the updateStatus function to also update local storage or use a callback
-const updateStatus = async (newStatus) => {
-  try {
-    const res = await fetch(`${API_URL}/jobs/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ status: newStatus })
-    });
-
-    if (res.ok) {
-      setJob((prev) => ({ ...prev, status: newStatus }));
-      
-      // Option 1: Store update timestamp to trigger refresh on home page
-      localStorage.setItem('jobStatusUpdated', Date.now().toString());
+  const updateStatus = async (newStatus) => {
+    try {
+      const res = await fetch(`${API_URL}/jobs/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (res.ok) {
+        setJob((prev) => ({ ...prev, status: newStatus }));
+        router.refresh();
+      }
+    } catch (err) {
+      console.log(err);
     }
-  } catch (err) {
-    console.log(err);
-  }
-};
+  };
 
-  // ================= DELETE JOB =================
   const deleteJob = async () => {
     try {
-      await fetch(`${API_URL}/jobs/${id}`, {
-        method: 'DELETE'
-      });
-
+      await fetch(`${API_URL}/jobs/${id}`, { method: 'DELETE' });
       router.push('/');
     } catch (err) {
       console.log(err);
@@ -85,6 +67,7 @@ const updateStatus = async (newStatus) => {
   }
 
   if (!job) return null;
+
   const statusColors = {
     open: { bg: 'bg-green-50', text: 'text-green-700', label: '● Open' },
     inprogress: { bg: 'bg-amber-50', text: 'text-amber-700', label: '◐ In Progress' },
@@ -107,7 +90,6 @@ const updateStatus = async (newStatus) => {
     return colors[category] || 'bg-slate-500';
   };
 
-  
   return (
     <div className="max-w-2xl mx-auto px-8 py-8">
       <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-[#555560] hover:text-[#111118] mb-6">
@@ -116,10 +98,10 @@ const updateStatus = async (newStatus) => {
         </svg>
         Back to all jobs
       </Link>
-      
+
       <div className="bg-white border border-black/10 rounded-2xl overflow-hidden">
         <div className={`h-1 ${getAccentColor(job.category)}`} />
-        
+
         <div className="p-8 border-b border-black/10">
           <div className="flex flex-wrap gap-2 mb-4">
             <span className={`inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full ${statusStyle.bg} ${statusStyle.text}`}>
@@ -132,8 +114,9 @@ const updateStatus = async (newStatus) => {
           <h2 className="font-syne text-2xl font-extrabold tracking-tight mb-3">{job.title}</h2>
           <p className="text-[#555560] text-base leading-relaxed">{job.description}</p>
         </div>
-        
-        <div className="grid grid-cols-3 border-b border-black/10">
+
+        {/* ✅ FIXED: 2-column grid — Location + Contact Name */}
+        <div className="grid grid-cols-2 border-b border-black/10">
           <div className="p-5 border-r border-black/10">
             <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">Location</div>
             <div className="text-sm font-medium text-[#111118] flex items-center gap-1.5">
@@ -144,18 +127,9 @@ const updateStatus = async (newStatus) => {
               {job.location}
             </div>
           </div>
-          <div className="p-5 border-r border-black/10">
-            <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">Budget</div>
-            <div className="text-sm font-medium text-[#111118] flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 6v6l4 2" />
-              </svg>
-              {job.budget || 'Not specified'}
-            </div>
-          </div>
+
           <div className="p-5">
-            <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">Posted by</div>
+            <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">Contact Name</div>
             <div className="text-sm font-medium text-[#111118] flex items-center gap-1.5">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -165,7 +139,8 @@ const updateStatus = async (newStatus) => {
             </div>
           </div>
         </div>
-        
+
+        {/* Posted + Email */}
         <div className="grid grid-cols-2 border-b border-black/10">
           <div className="p-5 border-r border-black/10">
             <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">Posted</div>
@@ -179,17 +154,20 @@ const updateStatus = async (newStatus) => {
               {new Date(job.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
             </div>
           </div>
+
           <div className="p-5">
-            <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">name</div>
+            <div className="text-[11px] uppercase tracking-wide text-[#888896] font-medium mb-1">Email</div>
+            {/* ✅ FIXED: proper envelope icon */}
             <div className="text-xs font-mono text-[#888896] flex items-center gap-1.5">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 4h16v16H4z" />
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
               </svg>
-              {job.contactName}
+              {job.contactEmail}
             </div>
           </div>
         </div>
-        
+
         <div className="p-6 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-[#555560]">Update status:</span>
@@ -217,8 +195,7 @@ const updateStatus = async (newStatus) => {
           </button>
         </div>
       </div>
-      
-      {/* Delete Modal */}
+
       {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-black/45 flex items-center justify-center z-50 p-4" onClick={() => setIsDeleteModalOpen(false)}>
           <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-xl" onClick={(e) => e.stopPropagation()}>

@@ -6,11 +6,6 @@ const jobSchema = new mongoose.Schema(
     description: { type: String, required: true, trim: true },
     category: { type: String, required: true },
     location: { type: String, required: true },
-
-    // ✅ ADD THESE
-    budget: { type: String, default: '' },
-    postedBy: { type: String, default: '' },
-
     contactName: { type: String, required: true },
     contactEmail: {
       type: String,
@@ -18,10 +13,14 @@ const jobSchema = new mongoose.Schema(
       match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
     },
 
-   
+    status: {
+      type: String,
+      enum: ['open', 'inprogress', 'closed'],
+      default: 'open'
+    }
   },
   {
-    timestamps: true // createdAt + updatedAt auto
+    timestamps: true
   }
 );
 

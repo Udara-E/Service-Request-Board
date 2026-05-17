@@ -41,7 +41,7 @@ export default function HomePage() {
         console.log(err);
         setError('Failed to load jobs');
       } finally {
-        setLoading(false); // ✅ CRITICAL FIX
+        setLoading(false); 
       }
     };
 
